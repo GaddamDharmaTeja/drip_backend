@@ -1,5 +1,7 @@
 package com.dripgrow.api.security;
 
+import com.dripgrow.api.model.AppSettings;
+import com.dripgrow.api.repository.AppSettingsRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -12,15 +14,24 @@ import org.springframework.stereotype.Service;
 @Service
 public class JwtService {
 
-    private final SecretKey key;
+    private final AppSettingsRepository appSettingsRepository;
+    private final String fallbackSecret;
     private final long expirationMs;
+    private volatile SecretKey cachedKey;
 
     public JwtService(
-            @Value("${dripgrow.jwt.secret}") String secret,
+            AppSettingsRepository appSettingsRepository,
+            @Value("${dripgrow.jwt.secret}") String fallbackSecret,
             @Value("${dripgrow.jwt.expiration-ms}") long expirationMs
     ) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.appSettingsRepository = appSettingsRepository;
+        this.fallbackSecret = fallbackSecret;
         this.expirationMs = expirationMs;
+    }
+
+    /** Call after seeding/updating JWT secret in MongoDB. */
+    public void reloadSecret() {
+        cachedKey = null;
     }
 
     public String generateToken(String username) {
@@ -30,7 +41,7 @@ public class JwtService {
                 .subject(username)
                 .issuedAt(now)
                 .expiration(exp)
-                .signWith(key)
+                .signWith(resolveKey())
                 .compact();
     }
 
@@ -49,9 +60,31 @@ public class JwtService {
 
     private Claims parseClaims(String token) {
         return Jwts.parser()
-                .verifyWith(key)
+                .verifyWith(resolveKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    private SecretKey resolveKey() {
+        SecretKey local = cachedKey;
+        if (local != null) {
+            return local;
+        }
+        synchronized (this) {
+            if (cachedKey == null) {
+                String secret = appSettingsRepository.findById(AppSettings.DEFAULT_ID)
+                        .map(AppSettings::getJwtSecret)
+                        .filter(s -> s != null && !s.isBlank())
+                        .orElse(fallbackSecret);
+                byte[] bytes = secret.getBytes(StandardCharsets.UTF_8);
+                if (bytes.length < 32) {
+                    // HMAC-SHA keys must be >= 256 bits
+                    bytes = (secret + "0123456789abcdef0123456789abcdef").getBytes(StandardCharsets.UTF_8);
+                }
+                cachedKey = Keys.hmacShaKeyFor(bytes);
+            }
+            return cachedKey;
+        }
     }
 }

@@ -1,13 +1,18 @@
 package com.dripgrow.api.config;
 
 import com.dripgrow.api.model.AdminUser;
+import com.dripgrow.api.model.AppSettings;
 import com.dripgrow.api.model.IrrigationPlan;
 import com.dripgrow.api.model.ProjectCase;
 import com.dripgrow.api.model.ProjectPlan;
 import com.dripgrow.api.repository.AdminUserRepository;
+import com.dripgrow.api.repository.AppSettingsRepository;
 import com.dripgrow.api.repository.IrrigationPlanRepository;
 import com.dripgrow.api.repository.ProjectCaseRepository;
 import com.dripgrow.api.repository.ProjectPlanRepository;
+import com.dripgrow.api.security.JwtService;
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,43 +29,64 @@ public class AdminBootstrap implements CommandLineRunner {
     private static final Logger log = LoggerFactory.getLogger(AdminBootstrap.class);
 
     private final AdminUserRepository adminUserRepository;
+    private final AppSettingsRepository appSettingsRepository;
     private final IrrigationPlanRepository irrigationPlanRepository;
     private final ProjectPlanRepository projectPlanRepository;
     private final ProjectCaseRepository projectCaseRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
     private final String adminUsername;
     private final String adminPassword;
+    private final String envJwtSecret;
     private final boolean seedEnabled;
 
     public AdminBootstrap(
             AdminUserRepository adminUserRepository,
+            AppSettingsRepository appSettingsRepository,
             IrrigationPlanRepository irrigationPlanRepository,
             ProjectPlanRepository projectPlanRepository,
             ProjectCaseRepository projectCaseRepository,
             PasswordEncoder passwordEncoder,
+            JwtService jwtService,
             @Value("${dripgrow.admin.username}") String adminUsername,
             @Value("${dripgrow.admin.password}") String adminPassword,
+            @Value("${dripgrow.jwt.secret}") String envJwtSecret,
             @Value("${dripgrow.seed.enabled:true}") boolean seedEnabled
     ) {
         this.adminUserRepository = adminUserRepository;
+        this.appSettingsRepository = appSettingsRepository;
         this.irrigationPlanRepository = irrigationPlanRepository;
         this.projectPlanRepository = projectPlanRepository;
         this.projectCaseRepository = projectCaseRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
         this.adminUsername = adminUsername;
         this.adminPassword = adminPassword;
+        this.envJwtSecret = envJwtSecret;
         this.seedEnabled = seedEnabled;
     }
 
     @Override
     public void run(String... args) {
-        if (!adminUserRepository.existsByUsername(adminUsername)) {
+        ensureAppSettings();
+
+        String username = appSettingsRepository.findById(AppSettings.DEFAULT_ID)
+                .map(AppSettings::getAdminUsername)
+                .filter(s -> s != null && !s.isBlank())
+                .orElse(adminUsername);
+
+        String password = appSettingsRepository.findById(AppSettings.DEFAULT_ID)
+                .map(AppSettings::getAdminBootstrapPassword)
+                .filter(s -> s != null && !s.isBlank())
+                .orElse(adminPassword);
+
+        if (!adminUserRepository.existsByUsername(username)) {
             AdminUser user = new AdminUser();
-            user.setUsername(adminUsername);
-            user.setPasswordHash(passwordEncoder.encode(adminPassword));
+            user.setUsername(username);
+            user.setPasswordHash(passwordEncoder.encode(password));
             user.setRole("ADMIN");
             adminUserRepository.save(user);
-            log.info("Seeded admin user '{}'", adminUsername);
+            log.info("Seeded admin user '{}'", username);
         }
 
         if (!seedEnabled) {
@@ -121,5 +147,51 @@ public class AdminBootstrap implements CommandLineRunner {
             projectCaseRepository.saveAll(List.of(c1, c2));
             log.info("Seeded project cases");
         }
+    }
+
+    private void ensureAppSettings() {
+        AppSettings settings = appSettingsRepository.findById(AppSettings.DEFAULT_ID)
+                .orElseGet(AppSettings::new);
+        boolean changed = false;
+
+        if (settings.getId() == null || settings.getId().isBlank()) {
+            settings.setId(AppSettings.DEFAULT_ID);
+            changed = true;
+        }
+
+        if (settings.getJwtSecret() == null || settings.getJwtSecret().isBlank()) {
+            String secret = isPlaceholder(envJwtSecret) ? generateSecret() : envJwtSecret;
+            settings.setJwtSecret(secret);
+            changed = true;
+            log.info("Stored JWT_SECRET in MongoDB collection app_settings");
+        }
+
+        if (settings.getAdminUsername() == null || settings.getAdminUsername().isBlank()) {
+            settings.setAdminUsername(adminUsername);
+            changed = true;
+        }
+
+        if (settings.getAdminBootstrapPassword() == null || settings.getAdminBootstrapPassword().isBlank()) {
+            settings.setAdminBootstrapPassword(adminPassword);
+            changed = true;
+        }
+
+        if (changed) {
+            appSettingsRepository.save(settings);
+        }
+        jwtService.reloadSecret();
+    }
+
+    private static boolean isPlaceholder(String secret) {
+        return secret == null
+                || secret.isBlank()
+                || secret.contains("change-me")
+                || secret.contains("REPLACE_WITH");
+    }
+
+    private static String generateSecret() {
+        byte[] bytes = new byte[48];
+        new SecureRandom().nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 }
