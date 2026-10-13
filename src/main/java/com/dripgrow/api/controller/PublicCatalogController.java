@@ -5,8 +5,10 @@ import com.dripgrow.api.model.IrrigationPlan;
 import com.dripgrow.api.model.ProjectCase;
 import com.dripgrow.api.model.ProjectPlan;
 import com.dripgrow.api.model.ServiceRequest;
+import com.dripgrow.api.model.SiteContact;
 import com.dripgrow.api.service.CatalogAdminService;
 import com.dripgrow.api.service.RequestQuotationService;
+import com.dripgrow.api.service.SiteContactService;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
@@ -22,13 +24,21 @@ public class PublicCatalogController {
 
     private final CatalogAdminService catalogAdminService;
     private final RequestQuotationService requestQuotationService;
+    private final SiteContactService siteContactService;
 
     public PublicCatalogController(
             CatalogAdminService catalogAdminService,
-            RequestQuotationService requestQuotationService
+            RequestQuotationService requestQuotationService,
+            SiteContactService siteContactService
     ) {
         this.catalogAdminService = catalogAdminService;
         this.requestQuotationService = requestQuotationService;
+        this.siteContactService = siteContactService;
+    }
+
+    @GetMapping("/api/site-contact")
+    public SiteContact siteContact() {
+        return siteContactService.get();
     }
 
     @GetMapping("/api/irrigation-plans")

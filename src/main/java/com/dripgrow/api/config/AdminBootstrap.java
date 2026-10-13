@@ -11,6 +11,7 @@ import com.dripgrow.api.repository.IrrigationPlanRepository;
 import com.dripgrow.api.repository.ProjectCaseRepository;
 import com.dripgrow.api.repository.ProjectPlanRepository;
 import com.dripgrow.api.security.JwtService;
+import com.dripgrow.api.service.SiteContactService;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.List;
@@ -33,6 +34,7 @@ public class AdminBootstrap implements CommandLineRunner {
     private final IrrigationPlanRepository irrigationPlanRepository;
     private final ProjectPlanRepository projectPlanRepository;
     private final ProjectCaseRepository projectCaseRepository;
+    private final SiteContactService siteContactService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final String adminUsername;
@@ -46,6 +48,7 @@ public class AdminBootstrap implements CommandLineRunner {
             IrrigationPlanRepository irrigationPlanRepository,
             ProjectPlanRepository projectPlanRepository,
             ProjectCaseRepository projectCaseRepository,
+            SiteContactService siteContactService,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             @Value("${dripgrow.admin.username}") String adminUsername,
@@ -58,6 +61,7 @@ public class AdminBootstrap implements CommandLineRunner {
         this.irrigationPlanRepository = irrigationPlanRepository;
         this.projectPlanRepository = projectPlanRepository;
         this.projectCaseRepository = projectCaseRepository;
+        this.siteContactService = siteContactService;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.adminUsername = adminUsername;
@@ -69,6 +73,7 @@ public class AdminBootstrap implements CommandLineRunner {
     @Override
     public void run(String... args) {
         ensureAppSettings();
+        siteContactService.ensureDefaults();
 
         String username = appSettingsRepository.findById(AppSettings.DEFAULT_ID)
                 .map(AppSettings::getAdminUsername)

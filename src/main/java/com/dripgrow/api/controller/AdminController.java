@@ -8,6 +8,7 @@ import com.dripgrow.api.model.ProjectCase;
 import com.dripgrow.api.model.ProjectPlan;
 import com.dripgrow.api.model.Quotation;
 import com.dripgrow.api.model.ServiceRequest;
+import com.dripgrow.api.model.SiteContact;
 import com.dripgrow.api.repository.OrderRepository;
 import com.dripgrow.api.repository.ProductRepository;
 import com.dripgrow.api.repository.QuotationRepository;
@@ -15,6 +16,7 @@ import com.dripgrow.api.repository.ServiceRequestRepository;
 import com.dripgrow.api.service.CatalogAdminService;
 import com.dripgrow.api.service.OrderService;
 import com.dripgrow.api.service.RequestQuotationService;
+import com.dripgrow.api.service.SiteContactService;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -40,6 +42,7 @@ public class AdminController {
     private final OrderRepository orderRepository;
     private final ServiceRequestRepository serviceRequestRepository;
     private final QuotationRepository quotationRepository;
+    private final SiteContactService siteContactService;
 
     public AdminController(
             CatalogAdminService catalogAdminService,
@@ -48,7 +51,8 @@ public class AdminController {
             ProductRepository productRepository,
             OrderRepository orderRepository,
             ServiceRequestRepository serviceRequestRepository,
-            QuotationRepository quotationRepository
+            QuotationRepository quotationRepository,
+            SiteContactService siteContactService
     ) {
         this.catalogAdminService = catalogAdminService;
         this.orderService = orderService;
@@ -57,6 +61,7 @@ public class AdminController {
         this.orderRepository = orderRepository;
         this.serviceRequestRepository = serviceRequestRepository;
         this.quotationRepository = quotationRepository;
+        this.siteContactService = siteContactService;
     }
 
     @GetMapping("/dashboard")
@@ -216,5 +221,15 @@ public class AdminController {
     @PatchMapping("/quotations/{id}")
     public Quotation updateQuotation(@PathVariable String id, @RequestBody Quotation quotation) {
         return requestQuotationService.updateQuotation(id, quotation);
+    }
+
+    @GetMapping("/site-contact")
+    public SiteContact getSiteContact() {
+        return siteContactService.get();
+    }
+
+    @PutMapping("/site-contact")
+    public SiteContact updateSiteContact(@RequestBody SiteContact body) {
+        return siteContactService.save(body);
     }
 }
