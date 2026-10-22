@@ -20,6 +20,9 @@ import com.dripgrow.api.service.SiteContactService;
 import com.dripgrow.api.service.StaffUserService;
 import com.dripgrow.api.dto.StaffUserRequest;
 import com.dripgrow.api.dto.StaffUserResponse;
+import com.dripgrow.api.dto.AccountResponse;
+import com.dripgrow.api.dto.AccountUpdateRequest;
+import com.dripgrow.api.service.AccountDirectoryService;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +51,7 @@ public class AdminController {
     private final QuotationRepository quotationRepository;
     private final SiteContactService siteContactService;
     private final StaffUserService staffUserService;
+    private final AccountDirectoryService accountDirectoryService;
 
     public AdminController(
             CatalogAdminService catalogAdminService,
@@ -58,7 +62,8 @@ public class AdminController {
             ServiceRequestRepository serviceRequestRepository,
             QuotationRepository quotationRepository,
             SiteContactService siteContactService,
-            StaffUserService staffUserService
+            StaffUserService staffUserService,
+            AccountDirectoryService accountDirectoryService
     ) {
         this.catalogAdminService = catalogAdminService;
         this.orderService = orderService;
@@ -69,6 +74,7 @@ public class AdminController {
         this.quotationRepository = quotationRepository;
         this.siteContactService = siteContactService;
         this.staffUserService = staffUserService;
+        this.accountDirectoryService = accountDirectoryService;
     }
 
     @GetMapping("/users")
@@ -80,6 +86,12 @@ public class AdminController {
 
     @PatchMapping("/users/{id}")
     public StaffUserResponse setUserActive(@PathVariable String id, @RequestBody Map<String, Boolean> body) { return staffUserService.setActive(id, Boolean.TRUE.equals(body.get("active"))); }
+
+    @GetMapping("/accounts")
+    public List<AccountResponse> accounts() { return accountDirectoryService.list(); }
+
+    @PatchMapping("/accounts/{type}/{id}")
+    public AccountResponse updateAccount(@PathVariable String type, @PathVariable String id, @RequestBody AccountUpdateRequest body) { return accountDirectoryService.update(type, id, body); }
 
     @GetMapping("/dashboard")
     public Map<String, Object> dashboard() {

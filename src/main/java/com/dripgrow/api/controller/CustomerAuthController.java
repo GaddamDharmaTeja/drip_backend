@@ -37,6 +37,7 @@ public class CustomerAuthController {
     public CustomerLoginResponse login(@Valid @RequestBody CustomerAuthRequest request) {
         Customer customer = customers.findByPhone(request.getPhone()).orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid mobile number or password"));
         if (!passwordEncoder.matches(request.getPassword(), customer.getPasswordHash())) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid mobile number or password");
+        if (!customer.isActive()) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This customer account has been suspended");
         return response(customer);
     }
     @GetMapping("/me")

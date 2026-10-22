@@ -1,6 +1,7 @@
 package com.dripgrow.api.security;
 
 import com.dripgrow.api.model.AdminUser;
+import com.dripgrow.api.model.Customer;
 import com.dripgrow.api.repository.AdminUserRepository;
 import com.dripgrow.api.repository.CustomerRepository;
 import com.dripgrow.api.security.StaffRole;
@@ -44,7 +45,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 boolean isCustomer = username.startsWith("customer:");
                 AdminUser adminUser = isCustomer ? null : adminUserRepository.findByUsername(username).orElse(null);
                 boolean userExists = isCustomer
-                        ? customerRepository.existsById(username.substring("customer:".length()))
+                        ? customerRepository.findById(username.substring("customer:".length())).map(Customer::isActive).orElse(false)
                         : adminUser != null && adminUser.isActive();
                 if (userExists && jwtService.isValid(token, username)
                         && SecurityContextHolder.getContext().getAuthentication() == null) {

@@ -57,7 +57,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/site-contact").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/locales/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/files/**").permitAll()
-                        .requestMatchers("/api/admin/users/**").hasRole("OWNER")
+                        .requestMatchers("/api/admin/users/**", "/api/admin/accounts/**").hasRole("OWNER")
                         .requestMatchers("/api/admin/products/**", "/api/admin/irrigation-plans/**", "/api/admin/project-plans/**", "/api/admin/projects/**", "/api/admin/uploads/**").hasAnyRole("OWNER", "ADMIN")
                         .requestMatchers("/api/admin/orders/**").hasAnyRole("OWNER", "ADMIN", "MAINTENANCE")
                         .requestMatchers("/api/admin/requests/*/convert-quote", "/api/admin/quotations/**").hasAnyRole("OWNER", "ADMIN", "SERVICE")

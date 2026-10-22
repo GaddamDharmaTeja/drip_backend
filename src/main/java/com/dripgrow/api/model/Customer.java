@@ -11,6 +11,7 @@ public class Customer {
     @Indexed(unique = true) private String phone;
     @Indexed(unique = true, sparse = true) private String email;
     private String passwordHash;
+    private boolean active = true;
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
     public String getFullName() { return fullName; }
@@ -21,4 +22,6 @@ public class Customer {
     public void setEmail(String email) { this.email = email; }
     public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
 }
