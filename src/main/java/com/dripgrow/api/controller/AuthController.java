@@ -5,6 +5,7 @@ import com.dripgrow.api.dto.LoginResponse;
 import com.dripgrow.api.model.AdminUser;
 import com.dripgrow.api.repository.AdminUserRepository;
 import com.dripgrow.api.security.JwtService;
+import com.dripgrow.api.security.StaffRole;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -39,7 +40,9 @@ public class AuthController {
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
         }
+        if (!user.isActive()) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This staff account has been disabled");
         String token = jwtService.generateToken(user.getUsername());
-        return new LoginResponse(token, jwtService.getExpirationMs(), user.getUsername());
+        StaffRole role = StaffRole.from(user.getRole());
+        return new LoginResponse(token, jwtService.getExpirationMs(), user.getUsername(), role.name(), role.permissions());
     }
 }

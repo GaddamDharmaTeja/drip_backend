@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -27,8 +28,10 @@ public class OrderController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public OrderResponse create(@Valid @RequestBody CreateOrderRequest request) {
-        return orderService.createCodOrder(request);
+    public OrderResponse create(@Valid @RequestBody CreateOrderRequest request, Authentication authentication) {
+        String customerId = authentication != null && authentication.getName().startsWith("customer:")
+                ? authentication.getName().substring("customer:".length()) : null;
+        return orderService.createCodOrder(request, customerId);
     }
 
     @GetMapping

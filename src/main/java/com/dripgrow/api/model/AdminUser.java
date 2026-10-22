@@ -15,6 +15,9 @@ public class AdminUser {
 
     private String passwordHash;
     private String role = "ADMIN";
+    private String email;
+    private String displayName;
+    private boolean active = true;
 
     public String getId() {
         return id;
@@ -47,4 +50,10 @@ public class AdminUser {
     public void setRole(String role) {
         this.role = role;
     }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public String getDisplayName() { return displayName; }
+    public void setDisplayName(String displayName) { this.displayName = displayName; }
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
 }

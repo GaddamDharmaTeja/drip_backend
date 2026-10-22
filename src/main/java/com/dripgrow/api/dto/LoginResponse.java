@@ -5,11 +5,15 @@ public class LoginResponse {
     private String token;
     private long expiresIn;
     private String username;
+    private String role;
+    private java.util.List<String> permissions;
 
-    public LoginResponse(String token, long expiresIn, String username) {
+    public LoginResponse(String token, long expiresIn, String username, String role, java.util.List<String> permissions) {
         this.token = token;
         this.expiresIn = expiresIn;
         this.username = username;
+        this.role = role;
+        this.permissions = permissions;
     }
 
     public String getToken() {
@@ -23,4 +27,6 @@ public class LoginResponse {
     public String getUsername() {
         return username;
     }
+    public String getRole() { return role; }
+    public java.util.List<String> getPermissions() { return permissions; }
 }

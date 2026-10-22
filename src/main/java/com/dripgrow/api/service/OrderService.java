@@ -26,7 +26,7 @@ public class OrderService {
         this.productService = productService;
     }
 
-    public OrderResponse createCodOrder(CreateOrderRequest request) {
+    public OrderResponse createCodOrder(CreateOrderRequest request, String customerId) {
         String delivery = request.getDelivery() == null
                 ? "standard"
                 : request.getDelivery().toLowerCase(Locale.ROOT);
@@ -73,6 +73,7 @@ public class OrderService {
 
         Order order = new Order();
         order.setOrderNumber("DG-" + Long.toString(System.currentTimeMillis(), 36).toUpperCase(Locale.ROOT));
+        order.setCustomerId(customerId);
         order.setCreatedAt(Instant.now());
         order.setItems(items);
         order.setAddress(request.getAddress());
@@ -84,6 +85,10 @@ public class OrderService {
         order.setStatus("Confirmed");
 
         return OrderResponse.from(orderRepository.save(order));
+    }
+
+    public List<OrderResponse> listCustomerOrders(String customerId) {
+        return orderRepository.findByCustomerIdOrderByCreatedAtDesc(customerId).stream().map(OrderResponse::from).toList();
     }
 
     public List<OrderResponse> listOrders(String phone) {

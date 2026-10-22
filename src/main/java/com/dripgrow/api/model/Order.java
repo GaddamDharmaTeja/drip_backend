@@ -15,6 +15,9 @@ public class Order {
     @Indexed(unique = true)
     private String orderNumber;
 
+    @Indexed
+    private String customerId;
+
     private Instant createdAt;
     private List<OrderItem> items;
     private Address address;
@@ -41,6 +44,8 @@ public class Order {
     public void setOrderNumber(String orderNumber) {
         this.orderNumber = orderNumber;
     }
+    public String getCustomerId() { return customerId; }
+    public void setCustomerId(String customerId) { this.customerId = customerId; }
 
     public Instant getCreatedAt() {
         return createdAt;

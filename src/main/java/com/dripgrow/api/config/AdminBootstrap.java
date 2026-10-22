@@ -89,9 +89,14 @@ public class AdminBootstrap implements CommandLineRunner {
             AdminUser user = new AdminUser();
             user.setUsername(username);
             user.setPasswordHash(passwordEncoder.encode(password));
-            user.setRole("ADMIN");
+            user.setRole("OWNER");
             adminUserRepository.save(user);
             log.info("Seeded admin user '{}'", username);
+        }
+        else {
+            adminUserRepository.findByUsername(username).ifPresent(user -> {
+                if ("ADMIN".equalsIgnoreCase(user.getRole())) { user.setRole("OWNER"); adminUserRepository.save(user); }
+            });
         }
 
         if (!seedEnabled) {

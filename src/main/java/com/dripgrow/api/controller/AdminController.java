@@ -17,6 +17,10 @@ import com.dripgrow.api.service.CatalogAdminService;
 import com.dripgrow.api.service.OrderService;
 import com.dripgrow.api.service.RequestQuotationService;
 import com.dripgrow.api.service.SiteContactService;
+import com.dripgrow.api.service.StaffUserService;
+import com.dripgrow.api.dto.StaffUserRequest;
+import com.dripgrow.api.dto.StaffUserResponse;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -43,6 +47,7 @@ public class AdminController {
     private final ServiceRequestRepository serviceRequestRepository;
     private final QuotationRepository quotationRepository;
     private final SiteContactService siteContactService;
+    private final StaffUserService staffUserService;
 
     public AdminController(
             CatalogAdminService catalogAdminService,
@@ -52,7 +57,8 @@ public class AdminController {
             OrderRepository orderRepository,
             ServiceRequestRepository serviceRequestRepository,
             QuotationRepository quotationRepository,
-            SiteContactService siteContactService
+            SiteContactService siteContactService,
+            StaffUserService staffUserService
     ) {
         this.catalogAdminService = catalogAdminService;
         this.orderService = orderService;
@@ -62,7 +68,18 @@ public class AdminController {
         this.serviceRequestRepository = serviceRequestRepository;
         this.quotationRepository = quotationRepository;
         this.siteContactService = siteContactService;
+        this.staffUserService = staffUserService;
     }
+
+    @GetMapping("/users")
+    public List<StaffUserResponse> users() { return staffUserService.list(); }
+
+    @PostMapping("/users")
+    @ResponseStatus(HttpStatus.CREATED)
+    public StaffUserResponse createUser(@Valid @RequestBody StaffUserRequest body) { return staffUserService.create(body); }
+
+    @PatchMapping("/users/{id}")
+    public StaffUserResponse setUserActive(@PathVariable String id, @RequestBody Map<String, Boolean> body) { return staffUserService.setActive(id, Boolean.TRUE.equals(body.get("active"))); }
 
     @GetMapping("/dashboard")
     public Map<String, Object> dashboard() {
