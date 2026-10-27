@@ -17,7 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class RequestQuotationService {
 
     private static final Set<String> REQUEST_TYPES =
-            Set.of("CONTACT", "BULK_QUOTE", "INSTALLATION", "CALCULATOR");
+            Set.of("CONTACT", "BULK_QUOTE", "INSTALLATION", "CALCULATOR", "PASSWORD_RESET");
     private static final Set<String> REQUEST_STATUSES = Set.of("New", "InProgress", "Closed");
     private static final Set<String> QUOTE_STATUSES = Set.of("Draft", "Sent", "Accepted", "Rejected");
 
